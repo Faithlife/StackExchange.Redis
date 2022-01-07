@@ -1503,7 +1503,16 @@ namespace StackExchange.Redis
                     if (!channel.IsNull)
                     {
                         _readStatus = ReadStatus.InvokePubSub;
-                        muxer.OnMessage(channel, channel, items[2].AsRedisValue());
+                        if (items[2].Type == ResultType.MultiBulk)
+                        {
+                            var subItems = items[2].GetItems();
+                            foreach (var subItem in subItems)
+                                muxer.OnMessage(channel, channel, subItem.AsRedisValue());
+                        }
+                        else
+                        {
+                            muxer.OnMessage(channel, channel, items[2].AsRedisValue());
+                        }
                     }
                     return; // AND STOP PROCESSING!
                 }

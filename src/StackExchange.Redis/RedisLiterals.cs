@@ -48,6 +48,7 @@ namespace StackExchange.Redis
             AND = "AND",
             BEFORE = "BEFORE",
             BY = "BY",
+            CACHING = "CACHING",
             CHANNELS = "CHANNELS",
             COPY = "COPY",
             COUNT = "COUNT",

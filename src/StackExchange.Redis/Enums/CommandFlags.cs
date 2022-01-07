@@ -82,5 +82,10 @@ namespace StackExchange.Redis
         NoScriptCache = 512,
 
         // 1024: used for timed-out; never user-specified, so not visible on the public API
+
+        /// <summary>
+        /// Indicates that this operation should opt-in to server-assisted client side caching
+        /// </summary>
+        ClientCaching = 2048,
     }
 }
