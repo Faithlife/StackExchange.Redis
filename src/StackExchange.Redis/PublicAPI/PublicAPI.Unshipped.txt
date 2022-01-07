@@ -1,1 +1,1 @@
-﻿
+﻿StackExchange.Redis.ISubscriber.IdentifyClientId(StackExchange.Redis.CommandFlags flags = StackExchange.Redis.CommandFlags.None) -> long?

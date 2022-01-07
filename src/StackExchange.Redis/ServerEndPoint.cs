@@ -963,6 +963,13 @@ namespace StackExchange.Redis
                 await AutoConfigureAsync(connection, log).ForAwait();
             }
 
+            if (Multiplexer.CommandMap.IsAvailable(RedisCommand.CLIENT))
+            {
+                msg = Message.Create(-1, CommandFlags.FireAndForget, RedisCommand.CLIENT, RedisLiterals.ID);
+                msg.SetInternalCall();
+                await WriteDirectOrQueueFireAndForgetAsync(connection, msg, ResultProcessor.ClientId).ForAwait();
+            }
+
             var tracer = GetTracerMessage(true);
             tracer = LoggingMessage.Create(log, tracer);
             log?.WriteLine($"{Format.ToString(this)}: Sending critical tracer (handshake): {tracer.CommandAndKey}");

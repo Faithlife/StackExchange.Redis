@@ -67,6 +67,7 @@ namespace StackExchange.Redis
 
         internal string? PhysicalName => physical?.ToString();
         public DateTime? ConnectedAt { get; private set; }
+        internal long? ClientId;
 
         public PhysicalBridge(ServerEndPoint serverEndPoint, ConnectionType type, int timeoutMilliseconds)
         {

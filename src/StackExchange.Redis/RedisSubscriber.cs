@@ -266,6 +266,15 @@ namespace StackExchange.Redis
         {
         }
 
+        public long? IdentifyClientId(CommandFlags flags = CommandFlags.None)
+        {
+            var selected = multiplexer.SelectServer(RedisCommand.SUBSCRIBE, flags, default(RedisKey));
+            var bridge = selected?.GetBridge(ConnectionType.Subscription, true);
+            if (bridge == null) return default;
+
+            return bridge.ClientId;
+        }
+
         public EndPoint? IdentifyEndpoint(RedisChannel channel, CommandFlags flags = CommandFlags.None)
         {
             var msg = Message.Create(-1, flags, RedisCommand.PUBSUB, RedisLiterals.NUMSUB, channel);
