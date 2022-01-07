@@ -47,6 +47,7 @@ namespace StackExchange.Redis
         private volatile int state = (int)State.Disconnected;
 
         internal string PhysicalName => physical?.ToString();
+        internal long? ClientId;
         public PhysicalBridge(ServerEndPoint serverEndPoint, ConnectionType type, int timeoutMilliseconds)
         {
             ServerEndPoint = serverEndPoint;

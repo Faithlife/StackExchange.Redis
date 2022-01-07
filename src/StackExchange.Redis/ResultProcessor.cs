@@ -20,6 +20,7 @@ namespace StackExchange.Redis
             AutoConfigure = new AutoConfigureProcessor(),
             TrackSubscriptions = new TrackSubscriptionsProcessor(),
             Tracer = new TracerProcessor(false),
+            ClientId = new ClientIdProcessor(),
             EstablishConnection = new TracerProcessor(true),
             BackgroundSaveStarted = new ExpectBasicStringProcessor(CommonReplies.backgroundSavingStarted_trimmed, startsWith: true);
 
@@ -2091,6 +2092,40 @@ The coordinates as a two items x,y array (longitude,latitude).
 
                         return true;
                 }
+                return false;
+            }
+        }
+
+        private class ClientIdProcessor : ResultProcessor<bool>
+        {
+            protected override bool SetResultCore(PhysicalConnection connection, Message message, in RawResult result)
+            {
+                bool happy = false;
+                long clientId = 0;
+                switch (message.Command)
+                {
+                    case RedisCommand.CLIENT:
+                        if (result.Type == ResultType.Integer)
+                        {
+                            if (result.TryGetInt64(out clientId))
+                            {
+                                happy = true;
+                            }
+                        }
+                        break;
+                    default:
+                        break;
+                }
+                if (happy)
+                {
+                    var bridge = connection.BridgeCouldBeNull;
+                    if (bridge != null)
+                        bridge.ClientId = clientId;
+
+                    SetResult(message, happy);
+                    return true;
+                }
+
                 return false;
             }
         }

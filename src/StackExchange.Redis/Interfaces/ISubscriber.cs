@@ -10,6 +10,12 @@ namespace StackExchange.Redis
     public interface ISubscriber : IRedis
     {
         /// <summary>
+        /// The client id on the redis server we are talking to
+        /// </summary>
+        /// <param name="flags">The command flags to use.</param>
+        long? IdentifyClientId(CommandFlags flags = CommandFlags.None);
+
+        /// <summary>
         /// Indicate exactly which redis server we are talking to
         /// </summary>
         /// <param name="channel">The channel to identify the server endpoint by.</param>
