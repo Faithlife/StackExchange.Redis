@@ -24,6 +24,8 @@ namespace StackExchange.Redis
 
         private static readonly Message ReusableAskingCommand = Message.Create(-1, CommandFlags.FireAndForget, RedisCommand.ASKING);
 
+        private static readonly Message ReusableClientCachingCommand = Message.Create(-1, CommandFlags.FireAndForget, RedisCommand.CLIENT, RedisLiterals.CACHING, RedisLiterals.yes);
+
         private readonly long[] profileLog = new long[ProfileLogSamples];
 
         /// <summary>
@@ -684,6 +686,7 @@ namespace StackExchange.Redis
             {
                 var messageIsSent = false;
                 SelectDatabaseInsideWriteLock(physical, message); // need to switch database *before* the transaction
+                SetClientCachingOnInsideWriteLock(physical, message); // need to set client caching *before* the transaction
                 foreach (var subCommand in multiMessage.GetMessages(physical))
                 {
                     result = WriteMessageToServerInsideWriteLock(physical, subCommand);
@@ -1439,6 +1442,19 @@ namespace StackExchange.Redis
             }
         }
 
+        private void SetClientCachingOnInsideWriteLock(PhysicalConnection connection, Message message)
+        {
+            CommandFlags flags = message.Flags;
+            if ((flags & CommandFlags.ClientCaching) == CommandFlags.ClientCaching)
+            {
+                var cachingMessage = ReusableClientCachingCommand;
+                connection.EnqueueInsideWriteLock(cachingMessage);
+                cachingMessage.WriteTo(connection);
+                cachingMessage.SetRequestSent();
+                IncrementOpCount();
+            }
+        }
+
         private WriteResult WriteMessageToServerInsideWriteLock(PhysicalConnection connection, Message message)
         {
             if (message == null)
@@ -1468,6 +1484,7 @@ namespace StackExchange.Redis
                 }
 
                 SelectDatabaseInsideWriteLock(connection, message);
+                SetClientCachingOnInsideWriteLock(connection, message);
 
                 if (!connection.TransactionActive)
                 {

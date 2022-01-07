@@ -84,5 +84,10 @@ namespace StackExchange.Redis
         // 1024: Removed - was used for async timeout checks; never user-specified, so not visible on the public API
 
         // 2048: Use subscription connection type; never user-specified, so not visible on the public API
+
+        /// <summary>
+        /// Indicates that this operation should opt-in to server-assisted client side caching
+        /// </summary>
+        ClientCaching = 16384,
     }
 }

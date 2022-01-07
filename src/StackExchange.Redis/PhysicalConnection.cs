@@ -1581,10 +1581,23 @@ namespace StackExchange.Redis
                     // invoke the handlers
                     var channel = items[1].AsRedisChannel(ChannelPrefix, RedisChannel.PatternMode.Literal);
                     Trace("MESSAGE: " + channel);
-                    if (!channel.IsNull && TryGetPubSubPayload(items[2], out var payload))
+                    if (!channel.IsNull)
                     {
-                        _readStatus = ReadStatus.InvokePubSub;
-                        muxer.OnMessage(channel, channel, payload);
+                        if (TryGetPubSubPayload(items[2], out var payload))
+                        {
+                            _readStatus = ReadStatus.InvokePubSub;
+                            muxer.OnMessage(channel, channel, payload);
+                        }
+                        else if (items[2].Type == ResultType.MultiBulk)
+                        {
+                            _readStatus = ReadStatus.InvokePubSub;
+                            var subItems = items[2].GetItems();
+                            foreach (var subItem in subItems)
+                            {
+                                if (TryGetPubSubPayload(subItem, out payload, allowArraySingleton: false))
+                                    muxer.OnMessage(channel, channel, payload);
+                            }
+                        }
                     }
                     return; // AND STOP PROCESSING!
                 }
