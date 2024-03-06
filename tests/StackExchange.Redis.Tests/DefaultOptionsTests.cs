@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
@@ -36,6 +37,8 @@ public class DefaultOptionsTests : TestBase
         public override bool ResolveDns => true;
         public override TimeSpan SyncTimeout => TimeSpan.FromSeconds(126);
         public override string TieBreaker => "TestTiebreaker";
+        public override string? User => "TestUser";
+        public override string? Password => "TestPassword";
     }
 
     public class TestRetryPolicy : IReconnectRetryPolicy
@@ -49,11 +52,11 @@ public class DefaultOptionsTests : TestBase
         DefaultOptionsProvider.AddProvider(new TestOptionsProvider(".testdomain"));
 
         var epc = new EndPointCollection(new List<EndPoint>() { new DnsEndPoint("local.testdomain", 0) });
-        var provider = DefaultOptionsProvider.GetForEndpoints(epc);
+        var provider = DefaultOptionsProvider.GetProvider(epc);
         Assert.IsType<TestOptionsProvider>(provider);
 
         epc = new EndPointCollection(new List<EndPoint>() { new DnsEndPoint("local.nottestdomain", 0) });
-        provider = DefaultOptionsProvider.GetForEndpoints(epc);
+        provider = DefaultOptionsProvider.GetProvider(epc);
         Assert.IsType<DefaultOptionsProvider>(provider);
     }
 
@@ -99,6 +102,8 @@ public class DefaultOptionsTests : TestBase
         Assert.True(options.ResolveDns);
         Assert.Equal(TimeSpan.FromSeconds(126), TimeSpan.FromMilliseconds(options.SyncTimeout));
         Assert.Equal("TestTiebreaker", options.TieBreaker);
+        Assert.Equal("TestUser", options.User);
+        Assert.Equal("TestPassword", options.Password);
     }
 
     public class TestAfterConnectOptionsProvider : DefaultOptionsProvider
@@ -153,5 +158,33 @@ public class DefaultOptionsTests : TestBase
 
         Assert.True(conn.IsConnected);
         Assert.Equal("FooBar", conn.ClientName);
+    }
+
+    public class TestLibraryNameOptionsProvider : DefaultOptionsProvider
+    {
+        public string Id { get; } = Guid.NewGuid().ToString();
+        public override string LibraryName => Id;
+    }
+
+    [Fact]
+    public async Task LibraryNameOverride()
+    {
+        var options = ConfigurationOptions.Parse(GetConfiguration());
+        var defaults = new TestLibraryNameOptionsProvider();
+        options.AllowAdmin = true;
+        options.Defaults = defaults;
+
+        using var conn = await ConnectionMultiplexer.ConnectAsync(options, Writer);
+        // CLIENT SETINFO is in 7.2.0+
+        ThrowIfBelowMinVersion(conn, RedisFeatures.v7_2_0_rc1);
+
+        var clients = await GetServer(conn).ClientListAsync();
+        foreach (var client in clients)
+        {
+            Log("Library name: " + client.LibraryName);
+        }
+
+        Assert.True(conn.IsConnected);
+        Assert.True(clients.Any(c => c.LibraryName == defaults.LibraryName), "Did not find client with name: " + defaults.Id);
     }
 }

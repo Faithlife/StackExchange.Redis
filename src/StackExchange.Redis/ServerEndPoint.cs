@@ -898,8 +898,9 @@ namespace StackExchange.Redis
             }
             Message msg;
             // Note that we need "" (not null) for password in the case of 'nopass' logins
-            string? user = Multiplexer.RawConfig.User;
-            string password = Multiplexer.RawConfig.Password ?? "";
+            var config = Multiplexer.RawConfig;
+            string? user = config.User;
+            string password = config.Password ?? "";
             if (!string.IsNullOrWhiteSpace(user))
             {
                 log?.WriteLine($"{Format.ToString(this)}: Authenticating (user/password)");
@@ -929,16 +930,26 @@ namespace StackExchange.Redis
                         await WriteDirectOrQueueFireAndForgetAsync(connection, msg, ResultProcessor.DemandOK).ForAwait();
                     }
                 }
-                if (Multiplexer.RawConfig.SetClientLibrary)
+                if (config.SetClientLibrary)
                 {
                     // note that this is a relatively new feature, but usually we won't know the
                     // server version, so we will use this speculatively and hope for the best
                     log?.WriteLine($"{Format.ToString(this)}: Setting client lib/ver");
 
-                    msg = Message.Create(-1, CommandFlags.FireAndForget, RedisCommand.CLIENT,
-                        RedisLiterals.SETINFO, RedisLiterals.lib_name, RedisLiterals.SE_Redis);
-                    msg.SetInternalCall();
-                    await WriteDirectOrQueueFireAndForgetAsync(connection, msg, ResultProcessor.DemandOK).ForAwait();
+                    var libName = config.LibraryName;
+                    if (string.IsNullOrWhiteSpace(libName))
+                    {
+                        // defer to provider if missing (note re null vs blank; if caller wants to disable
+                        // it, they should set SetClientLibrary to false, not set the name to empty string)
+                        libName = config.Defaults.LibraryName;
+                    }
+                    if (!string.IsNullOrWhiteSpace(libName))
+                    {
+                        msg = Message.Create(-1, CommandFlags.FireAndForget, RedisCommand.CLIENT,
+                            RedisLiterals.SETINFO, RedisLiterals.lib_name, libName);
+                        msg.SetInternalCall();
+                        await WriteDirectOrQueueFireAndForgetAsync(connection, msg, ResultProcessor.DemandOK).ForAwait();
+                    }
 
                     var version = Utils.GetLibVersion();
                     if (!string.IsNullOrWhiteSpace(version))
@@ -982,7 +993,7 @@ namespace StackExchange.Redis
                 var configChannel = Multiplexer.ConfigurationChangedChannel;
                 if (configChannel != null)
                 {
-                    msg = Message.Create(-1, CommandFlags.FireAndForget, RedisCommand.SUBSCRIBE, (RedisChannel)configChannel);
+                    msg = Message.Create(-1, CommandFlags.FireAndForget, RedisCommand.SUBSCRIBE, RedisChannel.Literal(configChannel));
                     // Note: this is NOT internal, we want it to queue in a backlog for sending when ready if necessary
                     await WriteDirectOrQueueFireAndForgetAsync(connection, msg, ResultProcessor.TrackSubscriptions).ForAwait();
                 }

@@ -52,7 +52,7 @@ namespace StackExchange.Redis.Configuration
         /// <summary>
         /// Gets a provider for the given endpoints, falling back to <see cref="DefaultOptionsProvider"/> if nothing more specific is found.
         /// </summary>
-        internal static Func<EndPointCollection, DefaultOptionsProvider> GetForEndpoints { get; } = (endpoints) =>
+        public static DefaultOptionsProvider GetProvider(EndPointCollection endpoints)
         {
             foreach (var provider in KnownProviders)
             {
@@ -65,8 +65,23 @@ namespace StackExchange.Redis.Configuration
                 }
             }
 
-            return new DefaultOptionsProvider();
-        };
+            return new DefaultOptionsProvider(); // no memoize; allow mutability concerns (also impacts subclasses, but: pragmatism)
+        }
+
+        /// <summary>
+        /// Gets a provider for a given endpoints, falling back to <see cref="DefaultOptionsProvider"/> if nothing more specific is found.
+        /// </summary>
+        public static DefaultOptionsProvider GetProvider(EndPoint endpoint)
+        {
+            foreach (var provider in KnownProviders)
+            {
+                if (provider.IsMatch(endpoint))
+                {
+                    return provider;
+                }
+            }
+            return new DefaultOptionsProvider(); // no memoize; allow mutability concerns (also impacts subclasses, but: pragmatism)
+        }
 
         /// <summary>
         /// Gets or sets whether connect/configuration timeouts should be explicitly notified via a TimeoutException.
@@ -172,6 +187,16 @@ namespace StackExchange.Redis.Configuration
         /// </summary>
         public virtual TimeSpan ConfigCheckInterval => TimeSpan.FromMinutes(1);
 
+        /// <summary>
+        /// The username to use to authenticate with the server.
+        /// </summary>
+        public virtual string? User => null;
+
+        /// <summary>
+        /// The password to use to authenticate with the server.
+        /// </summary>
+        public virtual string? Password => null;
+
         // We memoize this to reduce cost on re-access
         private string? defaultClientName;
         /// <summary>
@@ -186,6 +211,12 @@ namespace StackExchange.Redis.Configuration
             (TryGetAzureRoleInstanceIdNoThrow()
              ?? ComputerName
              ?? "StackExchange.Redis") + "(SE.Redis-v" + LibraryVersion + ")";
+
+        /// <summary>
+        /// Gets the library name to use for CLIENT SETINFO lib-name calls to Redis during handshake.
+        /// Defaults to "SE.Redis".
+        /// </summary>
+        public virtual string LibraryName => "SE.Redis";
 
         /// <summary>
         /// String version of the StackExchange.Redis library, for use in any options.
@@ -215,31 +246,21 @@ namespace StackExchange.Redis.Configuration
             string? roleInstanceId;
             try
             {
-                Assembly? asm = null;
-                foreach (var asmb in AppDomain.CurrentDomain.GetAssemblies())
-                {
-                    if (asmb.GetName()?.Name?.Equals("Microsoft.WindowsAzure.ServiceRuntime") == true)
-                    {
-                        asm = asmb;
-                        break;
-                    }
-                }
-                if (asm == null)
-                    return null;
-
-                var type = asm.GetType("Microsoft.WindowsAzure.ServiceRuntime.RoleEnvironment");
+                var roleEnvironmentType = Type.GetType("Microsoft.WindowsAzure.ServiceRuntime.RoleEnvironment, Microsoft.WindowsAzure.ServiceRuntime", throwOnError: false);
 
                 // https://msdn.microsoft.com/en-us/library/microsoft.windowsazure.serviceruntime.roleenvironment.isavailable.aspx
-                if (type?.GetProperty("IsAvailable") is not PropertyInfo isAvailableProp
+                if (roleEnvironmentType?.GetProperty("IsAvailable") is not PropertyInfo isAvailableProp
                     || isAvailableProp.GetValue(null, null) is not bool isAvailableVal
                     || !isAvailableVal)
                 {
                     return null;
                 }
 
-                var currentRoleInstanceProp = type.GetProperty("CurrentRoleInstance");
+                var currentRoleInstanceProp = roleEnvironmentType.GetProperty("CurrentRoleInstance");
                 var currentRoleInstanceId = currentRoleInstanceProp?.GetValue(null, null);
-                roleInstanceId = currentRoleInstanceId?.GetType().GetProperty("Id")?.GetValue(currentRoleInstanceId, null)?.ToString();
+
+                var roleInstanceType = Type.GetType("Microsoft.WindowsAzure.ServiceRuntime.RoleInstance, Microsoft.WindowsAzure.ServiceRuntime", throwOnError: false);
+                roleInstanceId = roleInstanceType?.GetProperty("Id")?.GetValue(currentRoleInstanceId, null)?.ToString();
 
                 if (roleInstanceId.IsNullOrEmpty())
                 {

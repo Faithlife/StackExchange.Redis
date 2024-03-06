@@ -243,6 +243,8 @@ StackExchange.Redis.ConfigurationOptions.IncludePerformanceCountersInExceptions.
 StackExchange.Redis.ConfigurationOptions.IncludePerformanceCountersInExceptions.set -> void
 StackExchange.Redis.ConfigurationOptions.KeepAlive.get -> int
 StackExchange.Redis.ConfigurationOptions.KeepAlive.set -> void
+StackExchange.Redis.ConfigurationOptions.LibraryName.get -> string?
+StackExchange.Redis.ConfigurationOptions.LibraryName.set -> void
 StackExchange.Redis.ConfigurationOptions.Password.get -> string?
 StackExchange.Redis.ConfigurationOptions.Password.set -> void
 StackExchange.Redis.ConfigurationOptions.PreserveAsyncOrder.get -> bool
@@ -359,7 +361,7 @@ StackExchange.Redis.ConnectionMultiplexer.PreserveAsyncOrder.set -> void
 StackExchange.Redis.ConnectionMultiplexer.PublishReconfigure(StackExchange.Redis.CommandFlags flags = StackExchange.Redis.CommandFlags.None) -> long
 StackExchange.Redis.ConnectionMultiplexer.PublishReconfigureAsync(StackExchange.Redis.CommandFlags flags = StackExchange.Redis.CommandFlags.None) -> System.Threading.Tasks.Task<long>!
 StackExchange.Redis.ConnectionMultiplexer.ReconfigureAsync(string! reason) -> System.Threading.Tasks.Task<bool>!
-StackExchange.Redis.ConnectionMultiplexer.RegisterProfiler(System.Func<StackExchange.Redis.Profiling.ProfilingSession!>! profilingSessionProvider) -> void
+StackExchange.Redis.ConnectionMultiplexer.RegisterProfiler(System.Func<StackExchange.Redis.Profiling.ProfilingSession?>! profilingSessionProvider) -> void
 StackExchange.Redis.ConnectionMultiplexer.ResetStormLog() -> void
 StackExchange.Redis.ConnectionMultiplexer.ServerMaintenanceEvent -> System.EventHandler<StackExchange.Redis.Maintenance.ServerMaintenanceEvent!>?
 StackExchange.Redis.ConnectionMultiplexer.StormLogThreshold.get -> int
@@ -497,7 +499,7 @@ StackExchange.Redis.IConnectionMultiplexer.PreserveAsyncOrder.get -> bool
 StackExchange.Redis.IConnectionMultiplexer.PreserveAsyncOrder.set -> void
 StackExchange.Redis.IConnectionMultiplexer.PublishReconfigure(StackExchange.Redis.CommandFlags flags = StackExchange.Redis.CommandFlags.None) -> long
 StackExchange.Redis.IConnectionMultiplexer.PublishReconfigureAsync(StackExchange.Redis.CommandFlags flags = StackExchange.Redis.CommandFlags.None) -> System.Threading.Tasks.Task<long>!
-StackExchange.Redis.IConnectionMultiplexer.RegisterProfiler(System.Func<StackExchange.Redis.Profiling.ProfilingSession!>! profilingSessionProvider) -> void
+StackExchange.Redis.IConnectionMultiplexer.RegisterProfiler(System.Func<StackExchange.Redis.Profiling.ProfilingSession?>! profilingSessionProvider) -> void
 StackExchange.Redis.IConnectionMultiplexer.ResetStormLog() -> void
 StackExchange.Redis.IConnectionMultiplexer.ServerMaintenanceEvent -> System.EventHandler<StackExchange.Redis.Maintenance.ServerMaintenanceEvent!>!
 StackExchange.Redis.IConnectionMultiplexer.StormLogThreshold.get -> int
@@ -1259,6 +1261,7 @@ StackExchange.Redis.Proxy.Twemproxy = 1 -> StackExchange.Redis.Proxy
 StackExchange.Redis.RedisChannel
 StackExchange.Redis.RedisChannel.Equals(StackExchange.Redis.RedisChannel other) -> bool
 StackExchange.Redis.RedisChannel.IsNullOrEmpty.get -> bool
+StackExchange.Redis.RedisChannel.IsPattern.get -> bool
 StackExchange.Redis.RedisChannel.PatternMode
 StackExchange.Redis.RedisChannel.PatternMode.Auto = 0 -> StackExchange.Redis.RedisChannel.PatternMode
 StackExchange.Redis.RedisChannel.PatternMode.Literal = 1 -> StackExchange.Redis.RedisChannel.PatternMode
@@ -1603,6 +1606,8 @@ static StackExchange.Redis.Condition.StringLengthLessThan(StackExchange.Redis.Re
 static StackExchange.Redis.Condition.StringNotEqual(StackExchange.Redis.RedisKey key, StackExchange.Redis.RedisValue value) -> StackExchange.Redis.Condition!
 static StackExchange.Redis.Configuration.DefaultOptionsProvider.AddProvider(StackExchange.Redis.Configuration.DefaultOptionsProvider! provider) -> void
 static StackExchange.Redis.Configuration.DefaultOptionsProvider.ComputerName.get -> string!
+static StackExchange.Redis.Configuration.DefaultOptionsProvider.GetProvider(StackExchange.Redis.EndPointCollection! endpoints) -> StackExchange.Redis.Configuration.DefaultOptionsProvider!
+static StackExchange.Redis.Configuration.DefaultOptionsProvider.GetProvider(System.Net.EndPoint! endpoint) -> StackExchange.Redis.Configuration.DefaultOptionsProvider!
 static StackExchange.Redis.Configuration.DefaultOptionsProvider.LibraryVersion.get -> string!
 static StackExchange.Redis.ConfigurationOptions.Parse(string! configuration) -> StackExchange.Redis.ConfigurationOptions!
 static StackExchange.Redis.ConfigurationOptions.Parse(string! configuration, bool ignoreUnknown) -> StackExchange.Redis.ConfigurationOptions!
@@ -1657,6 +1662,8 @@ static StackExchange.Redis.RedisChannel.implicit operator byte[]?(StackExchange.
 static StackExchange.Redis.RedisChannel.implicit operator StackExchange.Redis.RedisChannel(byte[]? key) -> StackExchange.Redis.RedisChannel
 static StackExchange.Redis.RedisChannel.implicit operator StackExchange.Redis.RedisChannel(string! key) -> StackExchange.Redis.RedisChannel
 static StackExchange.Redis.RedisChannel.implicit operator string?(StackExchange.Redis.RedisChannel key) -> string?
+static StackExchange.Redis.RedisChannel.Literal(byte[]! value) -> StackExchange.Redis.RedisChannel
+static StackExchange.Redis.RedisChannel.Literal(string! value) -> StackExchange.Redis.RedisChannel
 static StackExchange.Redis.RedisChannel.operator !=(byte[]! x, StackExchange.Redis.RedisChannel y) -> bool
 static StackExchange.Redis.RedisChannel.operator !=(StackExchange.Redis.RedisChannel x, byte[]! y) -> bool
 static StackExchange.Redis.RedisChannel.operator !=(StackExchange.Redis.RedisChannel x, StackExchange.Redis.RedisChannel y) -> bool
@@ -1667,6 +1674,10 @@ static StackExchange.Redis.RedisChannel.operator ==(StackExchange.Redis.RedisCha
 static StackExchange.Redis.RedisChannel.operator ==(StackExchange.Redis.RedisChannel x, StackExchange.Redis.RedisChannel y) -> bool
 static StackExchange.Redis.RedisChannel.operator ==(StackExchange.Redis.RedisChannel x, string! y) -> bool
 static StackExchange.Redis.RedisChannel.operator ==(string! x, StackExchange.Redis.RedisChannel y) -> bool
+static StackExchange.Redis.RedisChannel.Pattern(byte[]! value) -> StackExchange.Redis.RedisChannel
+static StackExchange.Redis.RedisChannel.Pattern(string! value) -> StackExchange.Redis.RedisChannel
+static StackExchange.Redis.RedisChannel.UseImplicitAutoPattern.get -> bool
+static StackExchange.Redis.RedisChannel.UseImplicitAutoPattern.set -> void
 static StackExchange.Redis.RedisFeatures.operator !=(StackExchange.Redis.RedisFeatures left, StackExchange.Redis.RedisFeatures right) -> bool
 static StackExchange.Redis.RedisFeatures.operator ==(StackExchange.Redis.RedisFeatures left, StackExchange.Redis.RedisFeatures right) -> bool
 static StackExchange.Redis.RedisKey.implicit operator byte[]?(StackExchange.Redis.RedisKey key) -> byte[]?
@@ -1788,9 +1799,12 @@ virtual StackExchange.Redis.Configuration.DefaultOptionsProvider.IncludeDetailIn
 virtual StackExchange.Redis.Configuration.DefaultOptionsProvider.IncludePerformanceCountersInExceptions.get -> bool
 virtual StackExchange.Redis.Configuration.DefaultOptionsProvider.IsMatch(System.Net.EndPoint! endpoint) -> bool
 virtual StackExchange.Redis.Configuration.DefaultOptionsProvider.KeepAliveInterval.get -> System.TimeSpan
+virtual StackExchange.Redis.Configuration.DefaultOptionsProvider.LibraryName.get -> string!
+virtual StackExchange.Redis.Configuration.DefaultOptionsProvider.Password.get -> string?
 virtual StackExchange.Redis.Configuration.DefaultOptionsProvider.Proxy.get -> StackExchange.Redis.Proxy
 virtual StackExchange.Redis.Configuration.DefaultOptionsProvider.ReconnectRetryPolicy.get -> StackExchange.Redis.IReconnectRetryPolicy?
 virtual StackExchange.Redis.Configuration.DefaultOptionsProvider.ResolveDns.get -> bool
 virtual StackExchange.Redis.Configuration.DefaultOptionsProvider.SetClientLibrary.get -> bool
 virtual StackExchange.Redis.Configuration.DefaultOptionsProvider.SyncTimeout.get -> System.TimeSpan
 virtual StackExchange.Redis.Configuration.DefaultOptionsProvider.TieBreaker.get -> string!
+virtual StackExchange.Redis.Configuration.DefaultOptionsProvider.User.get -> string?

@@ -145,7 +145,7 @@ namespace StackExchange.Redis
         private bool? allowAdmin, abortOnConnectFail, resolveDns, ssl, checkCertificateRevocation,
                       includeDetailInExceptions, includePerformanceCountersInExceptions, setClientLibrary;
 
-        private string? tieBreaker, sslHost, configChannel;
+        private string? tieBreaker, sslHost, configChannel, user, password;
 
         private TimeSpan? heartbeatInterval;
 
@@ -180,7 +180,7 @@ namespace StackExchange.Redis
         /// </summary>
         public DefaultOptionsProvider Defaults
         {
-            get => defaultOptions ??= DefaultOptionsProvider.GetForEndpoints(EndPoints);
+            get => defaultOptions ??= DefaultOptionsProvider.GetProvider(EndPoints);
             set => defaultOptions = value;
         }
 
@@ -233,13 +233,22 @@ namespace StackExchange.Redis
         }
 
         /// <summary>
-        /// Gets or sets whether the library should identify itself by library-name/version when possible
+        /// Gets or sets whether the library should identify itself by library-name/version when possible.
         /// </summary>
         public bool SetClientLibrary
         {
             get => setClientLibrary ?? Defaults.SetClientLibrary;
             set => setClientLibrary = value;
         }
+
+
+        /// <summary>
+        /// Gets or sets the library name to use for CLIENT SETINFO lib-name calls to Redis during handshake.
+        /// Defaults to "SE.Redis".
+        /// </summary>
+        /// <remarks>If the value is null, empty or whitespace, then the value from the options-provideer is used;
+        /// to disable the library name feature, use <see cref="SetClientLibrary"/> instead.</remarks>
+        public string? LibraryName { get; set; }
 
         /// <summary>
         /// Automatically encodes and decodes channels.
@@ -440,14 +449,22 @@ namespace StackExchange.Redis
         }
 
         /// <summary>
-        /// The user to use to authenticate with the server.
+        /// The username to use to authenticate with the server.
         /// </summary>
-        public string? User { get; set; }
+        public string? User
+        {
+            get => user ?? Defaults.User;
+            set => user = value;
+        }
 
         /// <summary>
         /// The password to use to authenticate with the server.
         /// </summary>
-        public string? Password { get; set; }
+        public string? Password
+        {
+            get => password ?? Defaults.Password;
+            set => password = value;
+        }
 
         /// <summary>
         /// Specifies whether asynchronous operations should be invoked in a way that guarantees their original delivery order.
@@ -634,8 +651,8 @@ namespace StackExchange.Redis
             allowAdmin = allowAdmin,
             defaultVersion = defaultVersion,
             connectTimeout = connectTimeout,
-            User = User,
-            Password = Password,
+            user = user,
+            password = password,
             tieBreaker = tieBreaker,
             ssl = ssl,
             sslHost = sslHost,
@@ -663,6 +680,7 @@ namespace StackExchange.Redis
 #endif
             Tunnel = Tunnel,
             setClientLibrary = setClientLibrary,
+            LibraryName = LibraryName,
         };
 
         /// <summary>
@@ -726,8 +744,8 @@ namespace StackExchange.Redis
             Append(sb, OptionKeys.AllowAdmin, allowAdmin);
             Append(sb, OptionKeys.Version, defaultVersion);
             Append(sb, OptionKeys.ConnectTimeout, connectTimeout);
-            Append(sb, OptionKeys.User, User);
-            Append(sb, OptionKeys.Password, (includePassword || string.IsNullOrEmpty(Password)) ? Password : "*****");
+            Append(sb, OptionKeys.User, user);
+            Append(sb, OptionKeys.Password, (includePassword || string.IsNullOrEmpty(password)) ? password : "*****");
             Append(sb, OptionKeys.TieBreaker, tieBreaker);
             Append(sb, OptionKeys.Ssl, ssl);
             Append(sb, OptionKeys.SslProtocols, SslProtocols?.ToString().Replace(',', '|'));
@@ -778,7 +796,7 @@ namespace StackExchange.Redis
 
         private void Clear()
         {
-            ClientName = ServiceName = User = Password = tieBreaker = sslHost = configChannel = null;
+            ClientName = ServiceName = user = password = tieBreaker = sslHost = configChannel = null;
             keepAlive = syncTimeout = asyncTimeout = connectTimeout = connectRetry = configCheckSeconds = DefaultDatabase = null;
             allowAdmin = abortOnConnectFail = resolveDns = ssl = setClientLibrary = null;
             SslProtocols = null;
@@ -852,7 +870,7 @@ namespace StackExchange.Redis
                             ClientName = value;
                             break;
                         case OptionKeys.ChannelPrefix:
-                            ChannelPrefix = value;
+                            ChannelPrefix = RedisChannel.Literal(value);
                             break;
                         case OptionKeys.ConfigChannel:
                             ConfigurationChannel = value;
@@ -873,10 +891,10 @@ namespace StackExchange.Redis
                             DefaultVersion = OptionKeys.ParseVersion(key, value);
                             break;
                         case OptionKeys.User:
-                            User = value;
+                            user = value;
                             break;
                         case OptionKeys.Password:
-                            Password = value;
+                            password = value;
                             break;
                         case OptionKeys.TieBreaker:
                             TieBreaker = value;
@@ -904,18 +922,24 @@ namespace StackExchange.Redis
                             {
                                 Tunnel = null;
                             }
-                            else if (value.StartsWith("http:"))
+                            else
                             {
-                                value = value.Substring(5);
-                                if (!Format.TryParseEndPoint(value, out var ep))
+                                // For backwards compatibility with `http:address_with_port`.
+                                if (value.StartsWith("http:") && !value.StartsWith("http://"))
+                                {
+                                    value = value.Insert(5, "//");
+                                }
+
+                                var uri = new Uri(value, UriKind.Absolute);
+                                if (uri.Scheme != "http")
+                                {
+                                    throw new ArgumentException("Tunnel cannot be parsed: " + value);
+                                }
+                                if (!Format.TryParseEndPoint($"{uri.Host}:{uri.Port}", out var ep))
                                 {
                                     throw new ArgumentException("HTTP tunnel cannot be parsed: " + value);
                                 }
                                 Tunnel = Tunnel.HttpProxy(ep);
-                            }
-                            else
-                            {
-                                throw new ArgumentException("Tunnel cannot be parsed: " + value);
                             }
                             break;
                         // Deprecated options we ignore...

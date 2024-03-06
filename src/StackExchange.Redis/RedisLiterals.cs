@@ -121,7 +121,6 @@ namespace StackExchange.Redis
             REWRITE = "REWRITE",
             RIGHT = "RIGHT",
             SAVE = "SAVE",
-            SE_Redis = "SE.Redis",
             SEGFAULT = "SEGFAULT",
             SET = "SET",
             SETINFO = "SETINFO",
