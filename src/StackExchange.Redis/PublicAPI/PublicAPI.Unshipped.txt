@@ -1,2 +1,3 @@
-﻿#nullable enable
-﻿StackExchange.Redis.IConnectionMultiplexer.GetConnectionId(System.Net.EndPoint! endPoint, StackExchange.Redis.ConnectionType type) -> long?
+#nullable enable
+StackExchange.Redis.IConnectionMultiplexer.GetConnectionId(System.Net.EndPoint! endPoint, StackExchange.Redis.ConnectionType type) -> long?
+StackExchange.Redis.CommandFlags.ClientCaching = 16384 -> StackExchange.Redis.CommandFlags
