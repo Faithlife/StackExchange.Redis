@@ -228,7 +228,7 @@ public class SharedConnectionFixture : IDisposable
             => _inner.ExportConfiguration(destination, options);
 
         public override string ToString() => _inner.ToString();
-        long? IInternalConnectionMultiplexer.GetConnectionId(EndPoint endPoint, ConnectionType type)
+        long? IConnectionMultiplexer.GetConnectionId(EndPoint endPoint, ConnectionType type)
             => _inner.GetConnectionId(endPoint, type);
     }
 

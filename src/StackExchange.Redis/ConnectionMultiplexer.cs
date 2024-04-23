@@ -2345,7 +2345,7 @@ namespace StackExchange.Redis
             return quits;
         }
 
-        long? IInternalConnectionMultiplexer.GetConnectionId(EndPoint endpoint, ConnectionType type)
+        long? IConnectionMultiplexer.GetConnectionId(EndPoint endpoint, ConnectionType type)
             => GetServerEndPoint(endpoint)?.GetBridge(type)?.ConnectionId;
     }
 }

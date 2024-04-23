@@ -21,8 +21,6 @@ namespace StackExchange.Redis
 
         ConfigurationOptions RawConfig { get; }
 
-        long? GetConnectionId(EndPoint endPoint, ConnectionType type);
-
         ServerSelectionStrategy ServerSelectionStrategy { get; }
 
         int GetSubscriptionsCount();
@@ -302,5 +300,13 @@ namespace StackExchange.Redis
         /// connections will not show updates until those connections next connect).
         /// </summary>
         void AddLibraryNameSuffix(string suffix);
+
+        /// <summary>
+        /// Gets the client id associated with the specified EndPoint and ConnectionType.
+        /// </summary>
+        /// <param name="endPoint">The endpoint to get the client id for.</param>
+        /// <param name="type">The connectiontype to get the client id for.</param>
+        /// <returns>The client id associated with the specified EndPoint and ConnectionType.</returns>
+        long? GetConnectionId(EndPoint endPoint, ConnectionType type);
     }
 }
