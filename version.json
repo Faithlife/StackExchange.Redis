@@ -1,6 +1,6 @@
 {
-  "version": "2.8",
-  "versionHeightOffset": -1,
+  "version": "2.8-faithlife",
+  "versionHeightOffset": 5000,
   "assemblyVersion": "2.0",
   "publicReleaseRefSpec": [
     "^refs/heads/main$",
