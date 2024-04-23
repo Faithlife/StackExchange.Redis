@@ -75,7 +75,8 @@ namespace StackExchange.Redis
 #pragma warning restore CS0618
                                                        | CommandFlags.FireAndForget
                                                        | CommandFlags.NoRedirect
-                                                       | CommandFlags.NoScriptCache;
+                                                       | CommandFlags.NoScriptCache
+                                                       | CommandFlags.ClientCaching;
         private IResultBox? resultBox;
 
         private ResultProcessor? resultProcessor;
