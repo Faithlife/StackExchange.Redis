@@ -1,1 +1,1 @@
-﻿
+﻿StackExchange.Redis.IConnectionMultiplexer.GetConnectionId(System.Net.EndPoint! endPoint, StackExchange.Redis.ConnectionType type) -> long?
