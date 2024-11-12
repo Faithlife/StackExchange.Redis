@@ -8,7 +8,8 @@ Current package versions:
 
 ## Unreleased
 
-No pending unreleased changes.
+- Format IPv6 endpoints correctly when rewriting configration strings ([#2813 by mgravell](https://github.com/StackExchange/StackExchange.Redis/pull/2813))
+- Update default Redis version from 4.0.0 to 6.0.0 for Azure Redis resources ([#2810 by philon-msft](https://github.com/StackExchange/StackExchange.Redis/pull/2810))
 
 ## 2.8.16
 
